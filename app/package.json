@@ -1,0 +1,50 @@
+{
+  "name": "app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@liveblocks/client": "^1.9.0",
+    "@liveblocks/node": "^3.15.2",
+    "@liveblocks/react": "^1.9.0",
+    "@liveblocks/yjs": "^1.9.0",
+    "@supabase/auth-helpers-nextjs": "^0.8.0",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "@tanstack/react-query": "^5.0.0",
+    "@tiptap/extension-collaboration": "^2.1.0",
+    "@tiptap/extension-collaboration-cursor": "^2.1.0",
+    "@tiptap/react": "^2.1.0",
+    "@tiptap/starter-kit": "^2.1.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "docx": "^9.6.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
+    "lucide-react": "^0.290.0",
+    "next": "14.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^2.0.0",
+    "yjs": "^13.6.0",
+    "zod": "^3.22.0",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5"
+  }
+}
