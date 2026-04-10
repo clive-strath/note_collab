@@ -43,20 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            if (!session && process.env.NODE_ENV === 'development') {
-                // Auto-provision a local test user since Login UI is deferred for future
-                console.log("No session found. Auto-logging in for local dev...")
-                const email = 'localdev@example.com'
-                const password = 'LocalDevPassword123!'
-                let res = await supabase.auth.signInWithPassword({ email, password })
-                if (res.error) {
-                    res = await supabase.auth.signUp({ email, password, options: { data: { name: 'Dev User' } } })
-                }
-                handleSession(res.data.session)
-            } else {
-                handleSession(session)
-            }
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            handleSession(session)
         })
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

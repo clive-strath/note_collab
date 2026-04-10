@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@liveblocks/client'
-import { createLiveblocksProvider } from '@liveblocks/yjs'
+import { LiveblocksYjsProvider } from '@liveblocks/yjs'
 import * as Y from 'yjs'
 
 const liveblocksClient = createClient({
@@ -9,7 +9,7 @@ const liveblocksClient = createClient({
 })
 
 export function createCollaborationProvider(roomId: string, yDoc: Y.Doc) {
-  return createLiveblocksProvider(yDoc, roomId, liveblocksClient)
+  return new LiveblocksYjsProvider(liveblocksClient, roomId, yDoc)
 }
 
 export { liveblocksClient }

@@ -5,14 +5,36 @@ export async function GET(req: NextRequest) {
   const user = await getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: notes, error } = await adminSupabase
+  // Find notes the user is an owner of
+  const { data: ownedNotes, error: error1 } = await adminSupabase
     .from('notes')
     .select('id, title, is_locked, updated_at, folder_id')
-    .or(`owner_id.eq.${user.id},id.in.(select note_id from permissions where user_id='${user.id}')`)
+    .eq('owner_id', user.id)
     .order('updated_at', { ascending: false })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ notes })
+  // Find permissions the user has
+  const { data: perms } = await adminSupabase
+    .from('permissions')
+    .select('note_id')
+    .eq('user_id', user.id)
+
+  const sharedNoteIds = perms ? perms.map((p: any) => p.note_id) : []
+  let sharedNotes: any[] = []
+  
+  if (sharedNoteIds.length > 0) {
+      const { data } = await adminSupabase
+        .from('notes')
+        .select('id, title, is_locked, updated_at, folder_id')
+        .in('id', sharedNoteIds)
+        .order('updated_at', { ascending: false })
+      if (data) sharedNotes = data
+  }
+
+  const allNotes = [...(ownedNotes || []), ...sharedNotes]
+  allNotes.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+
+  if (error1) return NextResponse.json({ error: error1.message }, { status: 500 })
+  return NextResponse.json({ notes: allNotes })
 }
 
 export async function POST(req: NextRequest) {
