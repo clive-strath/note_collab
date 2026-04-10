@@ -7,7 +7,11 @@ import { createClient } from '@supabase/supabase-js'
  */
 export async function getUserFromRequest(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
+    let token = authHeader?.replace('Bearer ', '')
+
+    if (!token) {
+        token = req.cookies.get('sb-access-token')?.value || req.cookies.get('sb-auth-token')?.value
+    }
 
     if (!token) return null
 

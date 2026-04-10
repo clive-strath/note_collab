@@ -32,16 +32,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        const handleSession = (session: Session | null) => {
             setSession(session)
             setUser(session?.user ?? null)
             setLoading(false)
+            if (session) {
+                document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=31536000; SameSite=Lax`
+            } else {
+                document.cookie = `sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+            }
+        }
+
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
+            if (!session && process.env.NODE_ENV === 'development') {
+                // Auto-provision a local test user since Login UI is deferred for future
+                console.log("No session found. Auto-logging in for local dev...")
+                const email = 'localdev@example.com'
+                const password = 'LocalDevPassword123!'
+                let res = await supabase.auth.signInWithPassword({ email, password })
+                if (res.error) {
+                    res = await supabase.auth.signUp({ email, password, options: { data: { name: 'Dev User' } } })
+                }
+                handleSession(res.data.session)
+            } else {
+                handleSession(session)
+            }
         })
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session)
-            setUser(session?.user ?? null)
-            setLoading(false)
+            handleSession(session)
         })
 
         return () => subscription.unsubscribe()
