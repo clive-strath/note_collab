@@ -6,7 +6,8 @@ import { Collaboration } from '@tiptap/extension-collaboration'
 import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor'
 import * as Y from 'yjs'
 import { useEffect, useState, useRef } from 'react'
-import { createCollaborationProvider } from '@/lib/liveblocks-provider'
+import { liveblocksClient } from '@/lib/liveblocks-provider'
+import { getYjsProviderForRoom } from '@liveblocks/yjs'
 
 interface TipTapEditorProps {
   noteId: string
@@ -27,7 +28,7 @@ export function TipTapEditor({ noteId, userId, userName, isLocked = false }: Tip
       }),
       ...(provider ? [
         Collaboration.configure({
-          document: provider.doc,
+          document: provider.getYDoc(),
         }),
         CollaborationCursor.configure({
           provider,
@@ -67,14 +68,12 @@ export function TipTapEditor({ noteId, userId, userName, isLocked = false }: Tip
 
   useEffect(() => {
     if (noteId && userId) {
-      const ydoc = new Y.Doc()
-      const liveblocksProvider = createCollaborationProvider(noteId, ydoc)
-      setProvider(liveblocksProvider)
+      const { room, leave } = liveblocksClient.enterRoom(noteId, { initialPresence: {} })
+      const provider = getYjsProviderForRoom(room)
+      setProvider(provider)
       
       return () => {
-        if (liveblocksProvider) {
-          liveblocksProvider.destroy()
-        }
+        leave()
       }
     }
   }, [noteId, userId])
