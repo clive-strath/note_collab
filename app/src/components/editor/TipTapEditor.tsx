@@ -5,25 +5,29 @@ import StarterKit from '@tiptap/starter-kit'
 import { Collaboration } from '@tiptap/extension-collaboration'
 import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor'
 import * as Y from 'yjs'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createCollaborationProvider } from '@/lib/liveblocks-provider'
 
 interface TipTapEditorProps {
   noteId: string
   userId: string
   userName: string
+  isLocked?: boolean
 }
 
-export function TipTapEditor({ noteId, userId, userName }: TipTapEditorProps) {
+export function TipTapEditor({ noteId, userId, userName, isLocked = false }: TipTapEditorProps) {
   const [provider, setProvider] = useState<any>(null)
   
   const editor = useEditor({
+    editable: !isLocked,
     extensions: [
-      StarterKit,
-      // Add collaboration extensions when provider is available
+      StarterKit.configure({
+
+        history: false,
+      }),
       ...(provider ? [
         Collaboration.configure({
-          document: new Y.Doc(),
+          document: provider.doc,
         }),
         CollaborationCursor.configure({
           provider,
@@ -34,21 +38,40 @@ export function TipTapEditor({ noteId, userId, userName }: TipTapEditorProps) {
         }),
       ] : []),
     ],
-    content: '<p>Start writing your note here...</p>',
   })
 
+  // Debounced save
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   useEffect(() => {
-    // Initialize Y.js document and LiveBlocks provider
+    if (!editor) return
+
+    const handleUpdate = () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(async () => {
+        const content = editor.getHTML()
+        await fetch(`/api/notes/${noteId}/content`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        })
+      }, 2000)
+    }
+
+    editor.on('update', handleUpdate)
+    return () => {
+      editor.off('update', handleUpdate)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [editor, noteId])
+
+  useEffect(() => {
     if (noteId && userId) {
       const ydoc = new Y.Doc()
-      const ytext = ydoc.getText('content')
-      
-      // Initialize LiveBlocks provider
       const liveblocksProvider = createCollaborationProvider(noteId, ydoc)
       setProvider(liveblocksProvider)
       
       return () => {
-        // Cleanup provider on unmount
         if (liveblocksProvider) {
           liveblocksProvider.destroy()
         }
@@ -59,32 +82,19 @@ export function TipTapEditor({ noteId, userId, userName }: TipTapEditorProps) {
   return (
     <div className="ruled-paper-editor">
       <div className="editor-toolbar">
-        {/* Toolbar buttons */}
-        <div className="flex space-x-2 p-2 border-b border-gray-200">
-          <button 
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            className={`px-3 py-1 text-sm rounded ${
-              editor?.isActive('bold') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            Bold
-          </button>
-          <button 
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            className={`px-3 py-1 text-sm rounded ${
-              editor?.isActive('italic') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            Italic
-          </button>
-          <button 
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            className={`px-3 py-1 text-sm rounded ${
-              editor?.isActive('bulletList') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            List
-          </button>
+        <div className="flex flex-wrap gap-2 p-2 border-b border-gray-200">
+          <button onClick={() => editor?.chain().focus().toggleBold().run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('bold') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Bold</button>
+          <button onClick={() => editor?.chain().focus().toggleItalic().run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('italic') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Italic</button>
+          <button onClick={() => editor?.chain().focus().toggleStrike().run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('strike') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Strike</button>
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <button onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('heading', { level: 1 }) ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>H1</button>
+          <button onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('heading', { level: 2 }) ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>H2</button>
+          <button onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('heading', { level: 3 }) ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>H3</button>
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <button onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('bulletList') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Bullet</button>
+          <button onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('orderedList') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Number</button>
+          <button onClick={() => editor?.chain().focus().toggleCodeBlock().run()} className={`px-3 py-1 text-sm rounded ${editor?.isActive('codeBlock') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Code</button>
+          <button onClick={() => editor?.chain().focus().setHorizontalRule().run()} className={`px-3 py-1 text-sm rounded bg-gray-100 hover:bg-gray-200`}>Rule</button>
         </div>
       </div>
       
