@@ -7,21 +7,22 @@
     @apply bg-slate-50 text-slate-800 antialiased font-sans;
   }
 
-  /* Prose fallbacks since typography plugin isn't installed */
-  .prose h1 { @apply text-3xl font-bold mb-4 mt-6 text-slate-900; }
-  .prose h2 { @apply text-2xl font-bold mb-3 mt-5 text-slate-800; }
-  .prose h3 { @apply text-xl font-semibold mb-2 mt-4 text-slate-800; }
-  .prose p { @apply text-base leading-7 mb-4 text-slate-700; }
-  .prose ul { @apply list-disc list-inside mb-4 space-y-1; }
-  .prose ol { @apply list-decimal list-outside ml-4 mb-4 space-y-1; }
-  .prose li { @apply pl-1; }
-  .prose blockquote { @apply border-l-4 border-slate-300 pl-4 italic text-slate-600 my-4; }
-  .prose pre { @apply bg-slate-800 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm my-4; }
-  .prose code { @apply bg-slate-100 text-pink-600 px-1 py-0.5 rounded text-sm font-mono; }
-  .prose pre code { @apply bg-transparent text-inherit p-0 rounded-none; }
-  .prose hr { @apply my-8 border-t border-slate-200; }
+  /* Enforce a rigid 24px baseline rhythm for ruled paper */
+  .prose h1 { @apply text-3xl font-bold mb-[24px] mt-[48px] text-slate-900 leading-[48px]; }
+  .prose h2 { @apply text-2xl font-bold mb-[24px] mt-[24px] text-slate-800 leading-[48px]; }
+  .prose h3 { @apply text-xl font-semibold mb-[24px] mt-[24px] text-slate-800 leading-[24px]; }
+  .prose p { @apply text-base mb-[24px] text-slate-700 leading-[24px] m-0 p-0; }
+  .prose ul { @apply list-disc list-inside mb-[24px] space-y-0 leading-[24px]; }
+  .prose ol { @apply list-decimal list-outside ml-4 mb-[24px] space-y-0 leading-[24px]; }
+  .prose li { @apply pl-1 leading-[24px] m-0 p-0; }
+  .prose blockquote { @apply border-l-4 border-slate-300 pl-4 italic text-slate-600 my-[24px] leading-[24px]; }
+  .prose pre { @apply bg-slate-800 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm my-[24px] leading-[24px]; }
+  .prose code { @apply bg-slate-100 text-pink-600 px-1 py-0.5 rounded text-sm font-mono leading-[24px]; }
+  .prose pre code { @apply bg-transparent text-inherit p-0 rounded-none leading-[24px]; }
+  .prose hr { @apply my-[24px] h-[24px] border-t border-slate-200 box-content flex items-center justify-center; }
   .prose strong { @apply font-semibold; }
   .prose s { @apply text-slate-400 line-through; }
+  .prose * { box-sizing: border-box; }
   
   /* Additional UI Polish */
   * {

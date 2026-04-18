@@ -2,27 +2,15 @@
 
 import { Layout } from '@/components/layout/Layout'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { LoginForm } from '@/components/auth/LoginForm'
 import { useEffect } from 'react'
 
 export default function HomePage() {
   const { user, loading } = useAuth()
-  const router = useRouter()
 
-  useEffect(() => {
-    if (!loading && user) {
-      // User is logged in, but we don't have a /notes dashboard yet except the sidebar,
-      // wait, they can just stay on / or we can keep them where they are so they see the sidebar and "New Note".
-      // Actually, if we leave them on the home page, the sidebar is visible to logged-in users.
-      // Let's just leave them on / unless there's a dedicated /notes page.
-      // But the sidebar is in Layout. They can just click New Note.
-      // Wait, let's keep the home page as a dashboard if logged in.
-    }
-  }, [user, loading, router])
+  if (loading) return <div className="flex justify-center items-center h-screen bg-gray-50">Loading...</div>
 
-  if (loading) return <Layout><div className="flex justify-center items-center h-64">Loading...</div></Layout>
-
-  // If logged in, maybe show a dashboard prompt?
+  // If logged in, show the application layout dashboard
   if (user) {
     return (
       <Layout>
@@ -34,41 +22,13 @@ export default function HomePage() {
     )
   }
 
+  // If unauthenticated, the landing page is the login/registration page
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center py-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Welcome to Collaborative Notes
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Real-time collaborative note-taking with a beautiful ruled paper interface
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold mb-2">Real-time Collaboration</h3>
-              <p className="text-gray-600">
-                Edit notes together with your team in real-time with conflict-free synchronization
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold mb-2">Ruled Paper Interface</h3>
-              <p className="text-gray-600">
-                Familiar note-taking experience with blue lines and red margin
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold mb-2">Secure & Private</h3>
-              <p className="text-gray-600">
-                Row-level security ensures your notes are only accessible to authorized users
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <LoginForm />
       </div>
-    </Layout>
+    </div>
   )
 }
+

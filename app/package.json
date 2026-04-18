@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0",
     "lint": "eslint"
   },
   "dependencies": {
@@ -19,6 +19,8 @@
     "@tanstack/react-query": "^5.0.0",
     "@tiptap/extension-collaboration": "^2.1.0",
     "@tiptap/extension-collaboration-cursor": "^2.1.0",
+    "@tiptap/extension-font-family": "^3.22.3",
+    "@tiptap/extension-text-style": "^3.22.3",
     "@tiptap/react": "^2.1.0",
     "@tiptap/starter-kit": "^2.1.0",
     "class-variance-authority": "^0.7.0",

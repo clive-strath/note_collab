@@ -14,17 +14,36 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (error || !note) return NextResponse.json({ error: 'Note not found' }, { status: 404 })
 
   // Verify access
-  if (note.owner_id !== user.id) {
+  let userRole = 'read'
+  if (note.owner_id === user.id) {
+    userRole = 'admin'
+  } else {
     const { data: perm } = await adminSupabase
       .from('permissions')
       .select('role')
       .eq('note_id', params.id)
       .eq('user_id', user.id)
       .single()
-    if (!perm) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!perm) {
+      // Check folder permissions
+      if (note.folder_id) {
+         const { data: folderPerm } = await adminSupabase
+           .from('folder_permissions')
+           .select('role')
+           .eq('folder_id', note.folder_id)
+           .eq('user_id', user.id)
+           .single()
+         if (!folderPerm) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+         userRole = folderPerm.role
+      } else {
+         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    } else {
+      userRole = perm.role
+    }
   }
 
-  return NextResponse.json({ note })
+  return NextResponse.json({ note, userRole })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

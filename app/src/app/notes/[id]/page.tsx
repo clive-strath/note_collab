@@ -25,6 +25,8 @@ export default function NotePage({ params }: { params: { id: string } }) {
     }
   }, [user, loading, router])
 
+  const [userRole, setUserRole] = useState<string>('read')
+
   useEffect(() => {
     if (!user) return
     const fetchNote = async () => {
@@ -33,6 +35,7 @@ export default function NotePage({ params }: { params: { id: string } }) {
         const data = await res.json()
         setNote(data.note)
         setTitle(data.note.title || 'Untitled Note')
+        setUserRole(data.userRole || 'read')
       }
     }
     fetchNote()
@@ -138,6 +141,7 @@ export default function NotePage({ params }: { params: { id: string } }) {
               userId={user.id}
               userName={user.user_metadata?.name || user.email || 'Anonymous'}
               isLocked={note?.is_locked && !isOwner}
+              userRole={userRole}
             />
           </div>
         </div>

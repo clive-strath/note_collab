@@ -19,14 +19,32 @@ export async function GET(req: NextRequest) {
     .eq('user_id', user.id)
 
   const sharedNoteIds = perms ? perms.map((p: any) => p.note_id) : []
+
+  // Find folder permissions the user has
+  const { data: folderPerms } = await adminSupabase
+    .from('folder_permissions')
+    .select('folder_id')
+    .eq('user_id', user.id)
+
+  const sharedFolderIds = folderPerms ? folderPerms.map((p: any) => p.folder_id) : []
+
   let sharedNotes: any[] = []
   
-  if (sharedNoteIds.length > 0) {
-      const { data } = await adminSupabase
+  if (sharedNoteIds.length > 0 || sharedFolderIds.length > 0) {
+      let query = adminSupabase
         .from('notes')
         .select('id, title, is_locked, updated_at, folder_id')
-        .in('id', sharedNoteIds)
         .order('updated_at', { ascending: false })
+
+      if (sharedNoteIds.length > 0 && sharedFolderIds.length > 0) {
+          query = query.or(`id.in.(${sharedNoteIds.join(',')}),folder_id.in.(${sharedFolderIds.join(',')})`)
+      } else if (sharedNoteIds.length > 0) {
+          query = query.in('id', sharedNoteIds)
+      } else {
+          query = query.in('folder_id', sharedFolderIds)
+      }
+      
+      const { data } = await query
       if (data) sharedNotes = data
   }
 

@@ -75,3 +75,13 @@ CREATE TABLE IF NOT EXISTS permissions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(note_id, user_id)
 );
+
+-- 7. Folder Permissions Table
+CREATE TABLE IF NOT EXISTS folder_permissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    folder_id UUID NOT NULL REFERENCES folders(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('read', 'write', 'admin')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(folder_id, user_id)
+);

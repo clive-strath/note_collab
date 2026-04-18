@@ -40,7 +40,7 @@ export function CommentsPanel({ noteId, isOpen, onClose }: { noteId: string, isO
     const res = await fetch(`/api/notes/${noteId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: newComment, anchor_type: 'general' }),
+      body: JSON.stringify({ content: newComment, anchor_type: 'paragraph' }),
     })
 
     if (res.ok) {

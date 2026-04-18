@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Folder, FileText, Lock, ChevronDown, ChevronRight, Trash2, Edit2, FolderPlus, X } from 'lucide-react'
+import { Plus, Search, Folder, FileText, Lock, ChevronDown, ChevronRight, Trash2, Edit2, FolderPlus, X, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { FolderShareModal } from '@/components/editor/FolderShareModal'
 
 interface Note {
   id: string
@@ -30,6 +31,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
   const [newFolderName, setNewFolderName] = useState('')
   const [editingFolder, setEditingFolder] = useState<string | null>(null)
   const [editFolderName, setEditFolderName] = useState('')
+  const [shareFolderId, setShareFolderId] = useState<string | null>(null)
   const { user } = useAuth()
   const router = useRouter()
 
@@ -268,6 +270,13 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
                           <Edit2 className="h-3 w-3 text-gray-500" />
                         </button>
                         <button
+                          onClick={() => { setShareFolderId(folder.id) }}
+                          title="Share Folder"
+                          className="p-1 hover:bg-gray-200 rounded text-blue-500"
+                        >
+                          <Share2 className="h-3 w-3" />
+                        </button>
+                        <button
                           onClick={() => deleteFolder(folder.id)}
                           title="Delete"
                           className="p-1 hover:bg-red-100 rounded"
@@ -315,6 +324,14 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
           </div>
         </div>
       </aside>
+
+      {shareFolderId && (
+         <FolderShareModal 
+           folderId={shareFolderId} 
+           isOpen={true} 
+           onClose={() => setShareFolderId(null)} 
+         />
+      )}
     </>
   )
 }
