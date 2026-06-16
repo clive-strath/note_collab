@@ -16,12 +16,20 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Paperverse themed variants
+        paper: "bg-paper-100 text-ink-900 border border-ink-200 hover:bg-paper-200 hover:border-ink-300 active:bg-paper-300 transition-all duration-200 shadow-sm hover:shadow-md",
+        ink: "bg-ink-900 text-paper-100 hover:bg-ink-800 active:bg-ink-950 transition-all duration-200 shadow-sm hover:shadow-md",
+        amber: "bg-amber-500 text-ink-900 hover:bg-amber-400 active:bg-amber-600 transition-all duration-200 shadow-sm hover:shadow-md",
+        sage: "bg-sage-500 text-paper-100 hover:bg-sage-400 active:bg-sage-600 transition-all duration-200 shadow-sm hover:shadow-md",
+        // Toolbar button variant
+        tool: "p-2 rounded-lg bg-transparent hover:bg-ink-100 active:bg-ink-200 text-ink-600 transition-colors",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        xs: "h-7 px-2.5 text-xs",
       },
     },
     defaultVariants: {

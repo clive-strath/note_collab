@@ -5,10 +5,11 @@ import { Layout } from '@/components/layout/Layout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageSquare, Share2, Download, FileText } from 'lucide-react'
+import { MessageSquare, Share2, Download, FileText, Lock, Unlock } from 'lucide-react'
 import { CommentsPanel } from '@/components/editor/CommentsPanel'
 import { ShareModal } from '@/components/editor/ShareModal'
 import { exportAsDocx, exportAsPdf } from '@/lib/export'
+import { Button } from '@/components/ui/button'
 
 export default function NotePage({ params }: { params: { id: string } }) {
   const { user, loading } = useAuth()
@@ -17,6 +18,7 @@ export default function NotePage({ params }: { params: { id: string } }) {
   const [title, setTitle] = useState('Untitled Note')
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [userRole, setUserRole] = useState<string>('read')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -24,8 +26,6 @@ export default function NotePage({ params }: { params: { id: string } }) {
       return
     }
   }, [user, loading, router])
-
-  const [userRole, setUserRole] = useState<string>('read')
 
   useEffect(() => {
     if (!user) return
@@ -72,7 +72,7 @@ export default function NotePage({ params }: { params: { id: string } }) {
   }
 
   if (loading || !user) {
-    return <Layout><div className="flex h-screen items-center justify-center">Loading...</div></Layout>
+    return <Layout><div className="flex h-screen items-center justify-center text-ink-400">Loading your paper...</div></Layout>
   }
 
   const isOwner = note && note.owner_id === user?.id
@@ -80,62 +80,105 @@ export default function NotePage({ params }: { params: { id: string } }) {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto h-[calc(100vh-6rem)] relative flex overflow-hidden">
-        <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-y-auto flex flex-col">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 sticky top-0 z-10 w-full flex-wrap gap-2">
-            <input
-              type="text"
-              placeholder="Note Title"
-              className="text-xl font-semibold bg-transparent border-none outline-none flex-1 min-w-[200px] truncate"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => handleTitleChange(title)}
-              disabled={note?.is_locked && !isOwner}
-            />
-            <div className="flex flex-wrap space-x-2">
-              <button onClick={handleExportPDF} className="p-2 rounded-md transition-colors flex items-center shadow-sm border bg-white border-gray-200 text-gray-600 hover:bg-gray-50" title="Export as PDF">
-                <Download className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">PDF</span>
-              </button>
-              <button onClick={handleExportDOCX} className="p-2 rounded-md transition-colors flex items-center shadow-sm border bg-white border-gray-200 text-gray-600 hover:bg-gray-50" title="Export as DOCX">
-                <FileText className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">DOCX</span>
-              </button>
-              {isOwner && (
-                <>
-                  <button
-                    onClick={() => setShareOpen(true)}
-                    className="p-2 rounded-md transition-colors flex items-center shadow-sm border bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                    title="Share Note"
-                  >
-                    <Share2 className="h-4 w-4 mr-1" />
-                    <span className="text-sm font-medium">Share</span>
-                  </button>
-                  <button
-                    onClick={handleToggleLock}
-                    className={`p-2 rounded-md transition-colors flex items-center shadow-sm border ${note?.is_locked ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                    title={note?.is_locked ? "Unlock Note" : "Lock Note"}
-                  >
-                    <span className="text-sm font-medium">{note?.is_locked ? 'Locked' : 'Lock'}</span>
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => setCommentsOpen(!commentsOpen)}
-                className={`p-2 rounded-md transition-colors flex items-center shadow-sm border ${commentsOpen ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                title="Toggle Comments"
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                <span className="text-sm font-medium">Comments</span>
-              </button>
+        <div className="flex-1 paper-card-3d flex flex-col overflow-hidden">
+          {/* Toolbar - styled as wooden ruler/stationery bar */}
+          <div className="stationery-bar sticky top-0 z-20 border-b border-ink-200/50">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3">
+              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                {/* Paper clip decoration */}
+                <div className="w-8 h-8 flex-shrink-0 paper-clip" />
+                
+                <input
+                  type="text"
+                  placeholder="Note Title"
+                  className="text-lg font-semibold font-caveat bg-transparent border-none outline-none flex-1 min-w-[150px] truncate text-ink-900 placeholder-ink-400"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={() => handleTitleChange(title)}
+                  disabled={note?.is_locked && !isOwner}
+                />
+                {note?.is_locked && !isOwner && (
+                  <Lock className="h-4 w-4 text-amber-500 flex-shrink-0" title="Locked by owner" />
+                )}
+              </div>
+              
+              <div className="flex flex-wrap items-center space-x-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleExportPDF}
+                  className="btn-ghost-paper"
+                  title="Export as PDF"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs font-medium">PDF</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleExportDOCX}
+                  className="btn-ghost-paper"
+                  title="Export as DOCX"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs font-medium">DOCX</span>
+                </Button>
+                {isOwner && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShareOpen(true)}
+                      className="btn-ghost-paper"
+                      title="Share Note"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs font-medium">Share</span>
+                    </Button>
+                    <Button
+                      variant={note?.is_locked ? "amber" : "ghost"}
+                      size="sm"
+                      onClick={handleToggleLock}
+                      className={note?.is_locked ? "btn-amber" : "btn-ghost-paper"}
+                      title={note?.is_locked ? "Unlock Note" : "Lock Note"}
+                    >
+                      {note?.is_locked ? (
+                        <Lock className="h-4 w-4" />
+                      ) : (
+                        <Unlock className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline text-xs font-medium">
+                        {note?.is_locked ? 'Locked' : 'Lock'}
+                      </span>
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant={commentsOpen ? "ink" : "ghost"}
+                  size="sm"
+                  onClick={() => setCommentsOpen(!commentsOpen)}
+                  className={commentsOpen ? "btn-ink" : "btn-ghost-paper"}
+                  title="Toggle Comments"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs font-medium">Comments</span>
+                </Button>
+              </div>
             </div>
           </div>
           
-          <div className="flex-1 relative overflow-auto" id="note-editor-container">
-            {note?.is_locked && (
-              <div className="bg-orange-100 text-orange-800 px-4 py-2 text-sm text-center font-medium sticky top-0 z-10 shadow-sm">
+          {/* Locked banner */}
+          {note?.is_locked && !isOwner && (
+            <div className="locked-banner sticky top-16 z-10 border-b border-amber-200">
+              <span className="flex items-center justify-center gap-2 text-sm font-medium">
+                <Lock className="h-4 w-4" />
                 This note is locked by the owner. It is currently read-only.
-              </div>
-            )}
+              </span>
+            </div>
+          )}
+
+          {/* Editor Area */}
+          <div className="flex-1 relative overflow-auto" id="note-editor-container">
             <TipTapEditor 
               noteId={params.id} 
               userId={user.id}
@@ -146,7 +189,7 @@ export default function NotePage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Comments Side Panel positioned absolutely over the editor on the right side */}
+        {/* Comments Side Panel */}
         <CommentsPanel 
           noteId={params.id} 
           isOpen={commentsOpen} 

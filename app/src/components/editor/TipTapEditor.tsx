@@ -6,10 +6,13 @@ import { Collaboration } from '@tiptap/extension-collaboration'
 import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor'
 import FontFamily from '@tiptap/extension-font-family'
 import { TextStyle } from '@tiptap/extension-text-style'
+import TextAlign from '@tiptap/extension-text-align'
 import * as Y from 'yjs'
 import { useEffect, useState, useRef } from 'react'
 import { liveblocksClient } from '@/lib/liveblocks-provider'
 import { getYjsProviderForRoom } from '@liveblocks/yjs'
+import { Bold, Italic, Strikethrough, Type, List, ListOrdered, Heading1, Heading2, Heading3, Minus, Save, Download, FileText, Paperclip, Scissors, Copy, Pilcrow, AlignLeft, AlignCenter, AlignRight, AlignJustify, Undo, Redo } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface TipTapEditorProps {
   noteId: string
@@ -54,7 +57,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
   }, [props.noteId, props.userId])
 
   if (!provider || fetching) {
-    return <div className="flex h-96 items-center justify-center text-slate-400 font-medium">Booting Secure Collaborative Environment...</div>
+    return <div className="flex h-96 items-center justify-center text-ink-400 font-medium font-caveat text-lg">Preparing your paper...</div>
   }
 
   return <InnerEditor {...props} provider={provider} initialHtml={initialHtml || ''} />
@@ -154,15 +157,17 @@ function InnerEditor({ noteId, userId, userName, isLocked = false, userRole = 'r
     }
   }, [editor, noteId])
 
-  return (
-    <div className="ruled-paper-editor">
-      <div className="editor-toolbar relative">
-        <div className="flex flex-wrap items-center gap-2 p-2 border-b border-gray-200">
-          <select 
+  const toolbarGroups = [
+    // Font family
+    [
+      {
+        component: (
+          <select
             onChange={(e) => editor?.chain().focus().setFontFamily(e.target.value).run()}
-            className="px-2 py-1 bg-white border border-gray-300 rounded text-sm cursor-pointer disabled:opacity-50"
+            className="select-paper text-sm py-1.5 px-2"
             disabled={isReadOnly}
             defaultValue="var(--font-sans), sans-serif"
+            aria-label="Font family"
           >
             <option value="var(--font-sans), sans-serif">Standard Font</option>
             <option value="var(--font-caveat), cursive">Caveat</option>
@@ -170,54 +175,97 @@ function InnerEditor({ noteId, userId, userName, isLocked = false, userRole = 'r
             <option value="var(--font-dancing-script), cursive">Dancing Script</option>
             <option value="var(--font-indie-flower), cursive">Indie Flower</option>
           </select>
-          <div className="w-px h-6 bg-gray-300 mx-1" />
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleBold().run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('bold') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Bold</button>
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleItalic().run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('italic') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Italic</button>
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleStrike().run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('strike') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Strike</button>
-          <div className="w-px h-6 bg-gray-300 mx-1" />
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('heading', { level: 1 }) ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>H1</button>
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('heading', { level: 2 }) ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>H2</button>
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('heading', { level: 3 }) ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>H3</button>
-          <div className="w-px h-6 bg-gray-300 mx-1" />
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('bulletList') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Bullet</button>
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${editor?.isActive('orderedList') ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>Number</button>
-          <button disabled={isReadOnly} onClick={() => editor?.chain().focus().setHorizontalRule().run()} className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 bg-gray-100 hover:bg-gray-200`}>Rule</button>
+        ),
+        separator: true
+      }
+    ],
+    // Text formatting
+    [
+      { icon: Bold, action: () => editor?.chain().focus().toggleBold().run(), active: editor?.isActive('bold'), tooltip: 'Bold (Ctrl+B)' },
+      { icon: Italic, action: () => editor?.chain().focus().toggleItalic().run(), active: editor?.isActive('italic'), tooltip: 'Italic (Ctrl+I)' },
+      { icon: Strikethrough, action: () => editor?.chain().focus().toggleStrike().run(), active: editor?.isActive('strike'), tooltip: 'Strikethrough' },
+      { separator: true },
+      { icon: Heading1, action: () => editor?.chain().focus().toggleHeading({ level: 1 }).run(), active: editor?.isActive('heading', { level: 1 }), tooltip: 'Heading 1' },
+      { icon: Heading2, action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), active: editor?.isActive('heading', { level: 2 }), tooltip: 'Heading 2' },
+      { icon: Heading3, action: () => editor?.chain().focus().toggleHeading({ level: 3 }).run(), active: editor?.isActive('heading', { level: 3 }), tooltip: 'Heading 3' },
+      { separator: true },
+      { icon: List, action: () => editor?.chain().focus().toggleBulletList().run(), active: editor?.isActive('bulletList'), tooltip: 'Bullet List' },
+      { icon: ListOrdered, action: () => editor?.chain().focus().toggleOrderedList().run(), active: editor?.isActive('orderedList'), tooltip: 'Numbered List' },
+      { separator: true },
+      { icon: Minus, action: () => editor?.chain().focus().setHorizontalRule().run(), tooltip: 'Horizontal Rule' },
+    ],
+    // Alignment
+    [
+      { icon: AlignLeft, action: () => editor?.chain().focus().setTextAlign('left').run(), active: editor?.isActive({ textAlign: 'left' }), tooltip: 'Align Left' },
+      { icon: AlignCenter, action: () => editor?.chain().focus().setTextAlign('center').run(), active: editor?.isActive({ textAlign: 'center' }), tooltip: 'Align Center' },
+      { icon: AlignRight, action: () => editor?.chain().focus().setTextAlign('right').run(), active: editor?.isActive({ textAlign: 'right' }), tooltip: 'Align Right' },
+      { icon: AlignJustify, action: () => editor?.chain().focus().setTextAlign('justify').run(), active: editor?.isActive({ textAlign: 'justify' }), tooltip: 'Justify' },
+      { separator: true },
+      { icon: Undo, action: () => editor?.chain().focus().undo().run(), disabled: !editor?.can().undo(), tooltip: 'Undo (Ctrl+Z)' },
+      { icon: Redo, action: () => editor?.chain().focus().redo().run(), disabled: !editor?.can().redo(), tooltip: 'Redo (Ctrl+Y)' },
+    ]
+  ]
+
+  return (
+    <div className="ruled-paper-editor flex flex-col h-full">
+      {/* Stationery Toolbar */}
+      <div className="stationery-bar border-b border-ink-200/50 sticky top-0 z-20">
+        <div className="flex flex-wrap items-center gap-2 p-3">
+          {/* Paper clip decoration on far left */}
+          <Paperclip className="w-6 h-6 text-ink-300 flex-shrink-0 -ml-1" aria-hidden="true" />
           
+          {toolbarGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="flex items-center gap-1">
+              {group.map((item, itemIndex) => {
+                if (item.separator) {
+                  return <div key={`sep-${groupIndex}-${itemIndex}`} className="w-px h-6 bg-ink-200/50 mx-1" aria-hidden="true" />
+                }
+                if (item.component) {
+                  return <div key={`comp-${groupIndex}-${itemIndex}`} className="flex items-center">{item.component}</div>
+                }
+                const Icon = item.icon
+                return (
+                  <button
+                    key={groupIndex * 100 + itemIndex}
+                    type="button"
+                    onClick={item.action}
+                    disabled={isReadOnly || item.disabled}
+                    className={`btn-tool-paper ${item.active ? 'active' : ''} ${item.disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    title={item.tooltip}
+                    aria-label={item.tooltip}
+                    aria-pressed={item.active || false}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+
           {isReadOnly ? (
-             <div className="ml-auto flex items-center text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">
-               <span className="font-semibold">Read Only</span>
-             </div>
+            <div className="ml-auto flex items-center text-xs text-amber-600 bg-amber-50/80 px-2.5 py-1.5 rounded border border-amber-200/50 backdrop-blur-sm">
+              <span className="font-medium">Read Only</span>
+            </div>
           ) : (
-             <button 
-               onClick={handleManualSave}
-               disabled={isSaving}
-               className={`ml-auto px-4 py-1 text-sm font-bold rounded ${isSaving ? 'bg-gray-400 text-gray-700' : 'bg-green-500 text-white hover:bg-green-600'} transition-all shadow`}
-               title="Force manual save to database"
-             >
-               {isSaving ? 'Saving...' : 'Save'}
-             </button>
+            <button
+              onClick={handleManualSave}
+              disabled={isSaving}
+              className="ml-auto btn-save-paper"
+              title="Force manual save to database"
+              aria-label={isSaving ? 'Saving...' : 'Save to database'}
+            >
+              <Save className={`h-4 w-4 ${isSaving ? 'animate-spin' : ''}`} aria-hidden="true" />
+              <span className="hidden sm:inline font-medium text-xs">{isSaving ? 'Saving...' : 'Save'}</span>
+            </button>
           )}
         </div>
       </div>
       
-      <div className="editor-container overflow-hidden rounded-b-xl border-x border-b border-gray-200">
+      {/* Editor Area - Ruled Paper */}
+      <div className="flex-1 editor-paper overflow-auto">
         <EditorContent 
           editor={editor} 
-          className="prose prose-sm max-w-none focus:outline-none"
-          style={{
-            backgroundColor: '#FFFEF7',
-            backgroundImage: `
-              linear-gradient(90deg, transparent 79px, rgba(231, 76, 60, 0.4) 79px, rgba(231, 76, 60, 0.4) 81px, transparent 81px),
-              linear-gradient(transparent 23px, #ADD8E6 23px, #ADD8E6 24px)
-            `,
-            backgroundSize: '100% 100%, 100% 24px',
-            backgroundPosition: '0 0, 0 4px',
-            paddingLeft: '100px',
-            paddingRight: '60px',
-            paddingTop: '4px',
-            paddingBottom: '24px',
-            minHeight: '600px',
-          }}
+          className="prose prose-sm max-w-none focus:outline-none p-6 pt-2"
         />
       </div>
     </div>
